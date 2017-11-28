@@ -17,5 +17,14 @@
         "laravel-mix": "^1.0",
         "lodash": "^4.17.4",
         "vue": "^2.5.7"
+    },
+    "dependencies": {
+        "bootstrap-toggle": "^2.2.2",
+        "colors": "^1.1.2",
+        "dotenv": "^4.0.0",
+        "font-awesome": "^4.7.0",
+        "socket.io": "^1.7.4",
+        "socketio-jwt": "^4.5.0",
+        "spectrum-colorpicker": "^1.8.0"
     }
 }

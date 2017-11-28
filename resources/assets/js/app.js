@@ -7,16 +7,41 @@
 
 require('./bootstrap');
 
-window.Vue = require('vue');
+// let socket = io();
 
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
+let socket = io.connect(`${window.location.hostname}:3000`);
 
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
+// emit event authenticate when connect
+socket.on('connect', function () {
+    console.log('Connected to SocketIO, Authenticating')
+    socket.emit('authenticate', {token: jwtToken});
+});
 
-const app = new Vue({
-    el: '#app'
+// if authenticated
+socket.on('authenticated', function () {
+    console.log('Authenticated');
+});
+
+// if unauthorized
+socket.on('unauthorized', function (data) {
+    console.log('Unauthorized, error: ' + data.message);
+});
+
+// if disconnect
+socket.on('disconnect', function () {
+    console.log('Disconnected');
+});
+
+// if click button
+$('#button').change(function (event) {
+    var data;
+    if ($(this).prop('checked')) {
+        data = 'on';
+    } else {
+        data = 'off';
+    }
+
+    console.log('Change led state:' + data);
+    // emit event led-change
+    socket.emit('led-change', data);
 });
