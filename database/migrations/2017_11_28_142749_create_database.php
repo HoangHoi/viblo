@@ -24,7 +24,7 @@ class CreateDatabase extends Migration
 
         Schema::create('devices', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('category_id')->unsigned();
+            $table->integer('user_id')->unsigned();
             $table->string('name');
             $table->string('identify_code')->unique();
             $table->string('password');

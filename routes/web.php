@@ -18,3 +18,8 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::group(['prefix' => 'device', 'namespace' => 'Device'], function () {
+    Route::get('session', 'SessionController@session');
+    Route::post('login', 'SessionController@login');
+    Route::post('logout', 'SessionController@logout');
+});

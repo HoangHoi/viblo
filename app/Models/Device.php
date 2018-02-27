@@ -7,17 +7,17 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
-use App\Models\Traits\Activeable;
-use App\Models\Traits\Filterable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class Device extends Model implements
     AuthenticatableContract,
-    AuthorizableContract
+    AuthorizableContract,
+    JWTSubject
 {
-    use Authenticatable, Authorizable, Activeable, Filterable;
+    use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'identify_code', 'name', 'password', 'is_actived',
+        'identify_code', 'name', 'password', 'is_actived', 'user_id'
     ];
 
     protected $table = 'devices';
@@ -25,4 +25,18 @@ class Device extends Model implements
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [
+            'id' => $this->id,
+            'identify_code' => $this->identify_code,
+            'guard' => 'device',
+        ];
+    }
 }
