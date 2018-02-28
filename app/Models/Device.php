@@ -39,4 +39,9 @@ class Device extends Model implements
             'guard' => 'device',
         ];
     }
+
+    public function isActive()
+    {
+        return $this->is_actived;
+    }
 }

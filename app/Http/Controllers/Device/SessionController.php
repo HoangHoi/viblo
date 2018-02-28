@@ -12,10 +12,16 @@ use App\Core\Responses\Auth\AuthResponse;
 class SessionController extends Controller
 {
     protected $guard = 'device';
+    const RESPON_STATUS = [
+        'not_login' => 0,
+        'login_in' => 1,
+        'login_fail' => 2,
+        'logout_success' => 3,
+    ];
 
     public function __construct()
     {
-        $this->middleware('guest:device', ['except' => ['logout', 'index']]);
+        $this->middleware('guest:device', ['except' => ['logout', 'session']]);
         $this->middleware('auth:device', ['only' => ['logout']]);
     }
 
@@ -25,26 +31,26 @@ class SessionController extends Controller
             return $this->userWasAuthenticated($auth);
         }
 
-        return $this->responseNotLogin();
+        return $this->sessionResponse(self::RESPON_STATUS['not_login']);
     }
 
     public function login(Request $request, JWTAuth $auth)
     {
         $this->validateLogin($request);
-        $credentials = $this->getCredentials($request);
+        $credentials = $request->only('identify_code', 'password');
 
         if ($this->attemptLogin($request, $credentials)) {
             return $this->userWasAuthenticated($auth);
         }
 
-        return AuthResponse::loginFailedResponse();
+        return $this->sessionResponse(self::RESPON_STATUS['login_fail']);
     }
 
     public function logout()
     {
         Auth::guard($this->guard)->logout();
 
-        return AuthResponse::logoutSuccessResponse();
+        return $this->sessionResponse(self::RESPON_STATUS['logout_success']);
     }
 
     protected function attemptLogin(Request $request, $credentials)
@@ -60,11 +66,6 @@ class SessionController extends Controller
         ]);
     }
 
-    protected function getCredentials(Request $request)
-    {
-        return $request->only('identify_code', 'password');
-    }
-
     protected function userWasAuthenticated($auth)
     {
         $user = Auth::guard($this->guard)->user();
@@ -72,56 +73,25 @@ class SessionController extends Controller
             $authToken = $auth->fromUser($user);
             $result = $this->makeUserResult($user, $authToken);
 
-            return $this->loginSuccessResponse($result);
+            return $this->sessionResponse(self::RESPON_STATUS['login_in'], $result);
         }
 
         $this->logout();
-        return $this->userNotActiveResponse();
+        return $this->sessionResponse(self::RESPON_STATUS['login_fail']);
     }
 
     protected function makeUserResult($user, $authToken)
     {
         return [
             'id' => $user->id,
-            'identify_code' => $user->identify_code,
             'auth_token' => $authToken,
-            'guard' => $this->guard,
         ];
     }
 
-    protected function loginSuccessResponse($data)
+    protected function sessionResponse($status, $data = [], $statusCode = 200)
     {
-        $data['status'] = 'login_in';
+        $data['status'] = $status;
         $data['token'] = csrf_token();
-        return $this->response($data);
-    }
-
-    protected function userNotActiveResponse()
-    {
-        return $this->response([
-            'status' => 'not_active',
-            'token' => csrf_token(),
-        ]);
-    }
-
-    protected function responseNotLogin()
-    {
-        return $this->response([
-            'status' => 'not_login',
-            'token' => csrf_token(),
-        ]);
-    }
-
-    protected function responseToFailedLogin()
-    {
-        return $this->response([
-            'status' => 'login_fail',
-            'token' => csrf_token(),
-        ]);
-    }
-
-    protected function response($data, $statusCode = 200)
-    {
         return response()->json($data, $statusCode);
     }
 }
